@@ -1,7 +1,7 @@
 {
-  "name": "typescript-module-starter",
-  "version": "0.0.1",
-  "description": "A sample TS project that can be used as a starter/scaffold.",
+  "name": "xmlservice-ts",
+  "version": "0.1.0",
+  "description": "A Node.js wrapper for the xmlservice-cli tool for IBM i systems. This project can be considered an alternative to node-itoolkit.",
   "main": "./lib/cjs/index.js",
   "scripts": {
     "clean": "rm -rf ./lib",
