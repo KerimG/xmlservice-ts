@@ -86,6 +86,8 @@ export class Connection {
           } else {
             reject(result);
           }
+
+          xmlservice.stdin.end();
         });
       } else {
         result.code = 0;
