@@ -1,12 +1,12 @@
 module.exports = {
-  module: '@typescript-eslint/parser',
+  parser: '@typescript-eslint/parser',
   env: {
     node: true,
     commonjs: true,
     es2021: true,
     jest: true,
   },
-  extends: ['plugin:@typescript-eslint/recommended', 'prettier/@typescript-eslint', 'plugin:prettier/recommended'],
+  extends: ['plugin:@typescript-eslint/recommended', 'prettier', 'plugin:prettier/recommended'],
   rules: {
     'linebreak-style': ['error', 'unix'],
     'no-console': 'off',
