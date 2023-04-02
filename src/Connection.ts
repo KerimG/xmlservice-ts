@@ -22,10 +22,11 @@ export class Connection {
     });
   }
 
-  runShellCommand(command: string) {
+  runShellCommand(command: string, stdin?: string) {
     return new Promise((resolve, reject) => {
       const stdoutBufferChunks: Buffer[] = [];
       const stderrBufferChunks: Buffer[] = [];
+      const stdinBuffer = stdin ? Buffer.from(stdin) : undefined;
 
       this.#client.exec(command, (error, stream) => {
         if (error) {
@@ -53,6 +54,11 @@ export class Connection {
         stream.stderr.on('data', (data: Buffer) => {
           stderrBufferChunks.push(Buffer.from(data));
         });
+
+        if (stdinBuffer) {
+          stream.stdin.write(stdinBuffer);
+          stream.stdin.end();
+        }
       });
     });
   }
