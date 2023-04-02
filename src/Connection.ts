@@ -20,14 +20,14 @@ export class Connection {
 
   #xmlserviceParams: string[];
 
-  constructor(config: ConnectionConfig) {
-    this.#xmlservicePath = config.xmlservicePath || '/QOpenSys/pkgs/bin/xmlservice-cli';
+  constructor(config?: ConnectionConfig) {
+    this.#xmlservicePath = config?.xmlservicePath || '/QOpenSys/pkgs/bin/xmlservice-cli';
     this.#ipcPath = '';
-    this.#stateful = config.stateful || false;
+    this.#stateful = config?.stateful || false;
     this.#xmlserviceParams = [];
 
     if (this.#stateful) {
-      this.#ipcPath = config.ipcPath || `/tmp/xmlservice-${randomUUID()}`;
+      this.#ipcPath = config?.ipcPath || `/tmp/xmlservice-${randomUUID()}`;
       this.#xmlserviceParams.push('-c', '*sbmjob', '-i', this.#ipcPath);
     }
   }
