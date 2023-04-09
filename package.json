@@ -1,6 +1,6 @@
 {
   "name": "xmlservice-ts",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "A Node.js wrapper for the xmlservice-cli tool for IBM i systems. This project can be considered an alternative to node-itoolkit.",
   "main": "./lib/cjs/index.js",
   "scripts": {
