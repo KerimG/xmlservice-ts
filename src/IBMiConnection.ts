@@ -1,10 +1,13 @@
-import { spawn } from 'child_process';
 import { randomUUID } from 'crypto';
+import { LocalTransport } from './Transports/LocalTransport';
+
+export type IBMiTransport = LocalTransport;
 
 export interface IBMiConnectionConfig {
   xmlservicePath?: string;
   stateful?: boolean;
   ipcPath?: string;
+  transport?: 'local';
 }
 
 export interface XmlserviceResult {
@@ -17,82 +20,42 @@ export class IBMiConnection {
   #xmlservicePath: string;
   #stateful: boolean;
   #ipcPath: string;
+  #transport: string;
 
   #xmlserviceParams: string[];
+  #transporter: IBMiTransport;
 
   constructor(config?: IBMiConnectionConfig) {
     this.#xmlservicePath = config?.xmlservicePath || '/QOpenSys/pkgs/bin/xmlservice-cli';
-    this.#ipcPath = '';
     this.#stateful = config?.stateful || false;
+    this.#ipcPath = '';
+    this.#transport = config?.transport || 'local';
+
     this.#xmlserviceParams = [];
 
     if (this.#stateful) {
       this.#ipcPath = config?.ipcPath || `/tmp/xmlservice-${randomUUID()}`;
       this.#xmlserviceParams.push('-c', '*sbmjob', '-i', this.#ipcPath);
     }
+
+    if (this.#transport === 'local') {
+      this.#transporter = new LocalTransport();
+    }
+  }
+
+  connect(): Promise<void> {
+    return this.#transporter.connect();
   }
 
   execute(xmlIn?: string): Promise<XmlserviceResult> {
-    return new Promise((resolve, reject) => {
-      const inputBuffer = xmlIn ? Buffer.from(xmlIn) : null;
-      const outputBuffer: Buffer[] = [];
-      const result: XmlserviceResult = {
-        output: null,
-        signal: null,
-        code: null,
-      };
-
-      const xmlservice = spawn(this.#xmlservicePath, this.#xmlserviceParams);
-
-      xmlservice.stdout.on('data', (chunk) => {
-        outputBuffer.push(chunk);
-      });
-
-      xmlservice.on('close', (code, signal) => {
-        result.output = Buffer.concat(outputBuffer).toString();
-        result.code = code;
-        result.signal = signal;
-
-        if (code === 0) {
-          resolve(result);
-        } else {
-          reject(result);
-        }
-      });
-
-      if (xmlIn) {
-        xmlservice.stdin.write(inputBuffer);
-        xmlservice.stdin.end();
-      }
-    });
+    return this.#transporter.execute(xmlIn, this.#xmlservicePath, this.#xmlserviceParams);
   }
 
   end(): Promise<XmlserviceResult> {
-    return new Promise((resolve, reject) => {
-      const result: XmlserviceResult = {
-        output: null,
-        signal: null,
-        code: null,
-      };
-      if (this.#stateful) {
-        const xmlservice = spawn(this.#xmlservicePath, ['-c', '*immed', '-i', this.#ipcPath]);
+    return this.#transporter.execute(null, this.#xmlservicePath, ['-c', '*immed', '-i', this.#ipcPath]);
+  }
 
-        xmlservice.on('close', (code, signal) => {
-          result.code = code;
-          result.signal = signal;
-
-          if (code === 0) {
-            resolve(result);
-          } else {
-            reject(result);
-          }
-        });
-
-        xmlservice.stdin.end();
-      } else {
-        result.code = 0;
-        resolve(result);
-      }
-    });
+  disconnect(): Promise<void> {
+    return this.#transporter.disconnect();
   }
 }
