@@ -1,7 +1,7 @@
 import { spawn } from 'child_process';
 import { randomUUID } from 'crypto';
 
-export interface ConnectionConfig {
+export interface IBMiConnectionConfig {
   xmlservicePath?: string;
   stateful?: boolean;
   ipcPath?: string;
@@ -13,14 +13,14 @@ export interface XmlserviceResult {
   code: number | null;
 }
 
-export class Connection {
+export class IBMiConnection {
   #xmlservicePath: string;
   #stateful: boolean;
   #ipcPath: string;
 
   #xmlserviceParams: string[];
 
-  constructor(config?: ConnectionConfig) {
+  constructor(config?: IBMiConnectionConfig) {
     this.#xmlservicePath = config?.xmlservicePath || '/QOpenSys/pkgs/bin/xmlservice-cli';
     this.#ipcPath = '';
     this.#stateful = config?.stateful || false;
