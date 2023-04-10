@@ -1,25 +1,35 @@
 import { Client, ConnectConfig } from 'ssh2';
 import { XmlserviceResult } from '../IBMiConnection';
 
+export type SshTransportParameter = ConnectConfig | Client;
+
 export class SshTransport {
   #client: Client;
-  #config: ConnectConfig;
+  #config: ConnectConfig | undefined;
 
-  constructor(config: ConnectConfig) {
+  constructor(parameter: SshTransportParameter) {
+    if (parameter instanceof Client) {
+      this.#client = parameter;
+      return;
+    }
     this.#client = new Client();
-    this.#config = config;
+    this.#config = parameter;
   }
 
   connect(): Promise<void> {
     return new Promise((resolve, reject) => {
-      this.#client.on('ready', () => {
-        resolve();
-      });
+      if (this.#config) {
+        this.#client.on('ready', () => {
+          resolve();
+        });
 
-      this.#client.on('error', (error) => {
-        reject(new Error(`Could not connect to server. Error: ${error}`));
-      });
-      this.#client.connect(this.#config);
+        this.#client.on('error', (error) => {
+          reject(new Error(`Could not connect to server. Error: ${error}`));
+        });
+        this.#client.connect(this.#config);
+      }
+
+      resolve();
     });
   }
 

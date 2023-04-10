@@ -1,24 +1,24 @@
 import { randomUUID } from 'crypto';
 import { LocalTransport } from './Transports/LocalTransport';
-import { ConnectConfig } from 'ssh2';
+import { Client, ConnectConfig } from 'ssh2';
 import { SshTransport } from './Transports/SshTransport';
 
 export type IBMiTransport = LocalTransport | SshTransport;
 
-export type IBMiConnectionConfig =
+export type IBMiConnectionConfig = { xmlservicePath?: string; stateful?: boolean; ipcPath?: string } & TransportOptions;
+
+type TransportOptions =
   | {
-      xmlservicePath?: string;
-      stateful?: boolean;
-      ipcPath?: string;
       transport?: 'local';
-      sshConfig?: never;
     }
   | {
-      xmlservicePath?: string;
-      stateful?: boolean;
-      ipcPath?: string;
       transport: 'ssh'; // if transport is ssh, sshConfig is required
       sshConfig: ConnectConfig;
+    }
+  | {
+      transport: 'ssh';
+      sshConfig?: never;
+      sshClient: Client; // it's also possible to pass one's own SSH Connection to the transport
     };
 
 export interface XmlserviceResult {
@@ -31,7 +31,6 @@ export class IBMiConnection {
   #xmlservicePath: string;
   #stateful: boolean;
   #ipcPath: string;
-  #transport: string;
 
   #xmlserviceParams: string[];
   #transporter: IBMiTransport;
@@ -40,7 +39,6 @@ export class IBMiConnection {
     this.#xmlservicePath = config?.xmlservicePath || '/QOpenSys/pkgs/bin/xmlservice-cli';
     this.#stateful = config?.stateful || false;
     this.#ipcPath = '';
-    this.#transport = config?.transport || 'local';
 
     this.#xmlserviceParams = [];
 
@@ -49,12 +47,12 @@ export class IBMiConnection {
       this.#xmlserviceParams.push('-c', '*sbmjob', '-i', this.#ipcPath);
     }
 
-    if (this.#transport === 'local') {
-      this.#transporter = new LocalTransport();
-    } else if (this.#transport === 'ssh' && config?.sshConfig) {
+    if (config?.transport === 'ssh' && config?.sshConfig) {
       this.#transporter = new SshTransport(config.sshConfig);
+    } else if (config?.transport === 'ssh' && config?.sshClient) {
+      this.#transporter = new SshTransport(config?.sshClient);
     } else {
-      throw new Error('Invalid transport. Must be "local" or "ssh" with corresponding config.');
+      this.#transporter = new LocalTransport();
     }
   }
 
