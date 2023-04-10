@@ -51,8 +51,10 @@ export class IBMiConnection {
       this.#transporter = new SshTransport(config.sshConfig);
     } else if (config?.transport === 'ssh' && config?.sshClient) {
       this.#transporter = new SshTransport(config?.sshClient);
-    } else {
+    } else if (config?.transport === 'local' || !config?.transport) {
       this.#transporter = new LocalTransport();
+    } else {
+      throw new Error(`Invalid transport: ${config?.transport}`);
     }
   }
 
