@@ -46,7 +46,7 @@ export class SshTransport {
 
       this.#client.exec(`${xmlservicePath} ${xmlserviceParams.join(' ')}`, (error, stream) => {
         if (error) {
-          reject(error);
+          return reject(error);
         }
 
         stream.on('data', (chunk: Buffer) => {
