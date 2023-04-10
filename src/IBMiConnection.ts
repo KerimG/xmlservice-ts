@@ -38,9 +38,7 @@ export class IBMiConnection {
       this.#xmlserviceParams.push('-c', '*sbmjob', '-i', this.#ipcPath);
     }
 
-    if (this.#transport === 'local') {
-      this.#transporter = new LocalTransport();
-    }
+    this.#transporter = new LocalTransport();
   }
 
   connect(): Promise<void> {
@@ -48,11 +46,11 @@ export class IBMiConnection {
   }
 
   execute(xmlIn?: string): Promise<XmlserviceResult> {
-    return this.#transporter.execute(xmlIn, this.#xmlservicePath, this.#xmlserviceParams);
+    return this.#transporter.execute(this.#xmlservicePath, this.#xmlserviceParams, xmlIn);
   }
 
   end(): Promise<XmlserviceResult> {
-    return this.#transporter.execute(null, this.#xmlservicePath, ['-c', '*immed', '-i', this.#ipcPath]);
+    return this.#transporter.execute(this.#xmlservicePath, ['-c', '*immed', '-i', this.#ipcPath]);
   }
 
   disconnect(): Promise<void> {
