@@ -27,9 +27,9 @@ export class SshTransport {
           reject(new Error(`Could not connect to server. Error: ${error}`));
         });
         this.#client.connect(this.#config);
+      } else {
+        resolve();
       }
-
-      resolve();
     });
   }
 
