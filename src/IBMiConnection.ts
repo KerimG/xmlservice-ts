@@ -5,7 +5,11 @@ import { SshTransport } from './Transports/SshTransport';
 
 export type IBMiTransport = LocalTransport | SshTransport;
 
-export type IBMiConnectionConfig = { xmlservicePath?: string; stateful?: boolean; ipcPath?: string } & TransportOptions;
+export type IBMiConnectionConfig = {
+  xmlservicePath?: string;
+  stateful?: boolean;
+  ipcPath?: string;
+} & TransportOptions;
 
 type TransportOptions =
   | {
