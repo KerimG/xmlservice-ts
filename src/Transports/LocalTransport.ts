@@ -6,7 +6,7 @@ export class LocalTransport {
     return Promise.resolve();
   }
 
-  execute(xmlIn, xmlservicePath, xmlserviceParams): Promise<XmlserviceResult> {
+  execute(xmlservicePath: string, xmlserviceParams: string[], xmlIn?: string): Promise<XmlserviceResult> {
     return new Promise((resolve, reject) => {
       const inputBuffer = xmlIn ? Buffer.from(xmlIn) : null;
       const outputBuffer: Buffer[] = [];
@@ -16,13 +16,18 @@ export class LocalTransport {
         code: null,
       };
 
-      const xmlservice = spawn(xmlservicePath, xmlserviceParams);
+      const subprocess = spawn(xmlservicePath, xmlserviceParams);
 
-      xmlservice.stdout.on('data', (chunk) => {
+      subprocess.stdout.on('data', (chunk) => {
         outputBuffer.push(chunk);
       });
 
-      xmlservice.on('close', (code, signal) => {
+      // if starting the subprocess fails. It's not the same as the subprocess returning an error
+      subprocess.on('error', (err) => {
+        reject(err);
+      });
+
+      subprocess.on('close', (code, signal) => {
         result.output = Buffer.concat(outputBuffer).toString();
         result.code = code;
         result.signal = signal;
@@ -34,10 +39,10 @@ export class LocalTransport {
         }
       });
 
-      if (xmlIn) {
-        xmlservice.stdin.write(inputBuffer);
+      if (inputBuffer) {
+        subprocess.stdin.write(inputBuffer);
       }
-      xmlservice.stdin.end();
+      subprocess.stdin.end();
     });
   }
 
