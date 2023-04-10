@@ -1,14 +1,25 @@
 import { randomUUID } from 'crypto';
 import { LocalTransport } from './Transports/LocalTransport';
+import { ConnectConfig } from 'ssh2';
+import { SshTransport } from './Transports/SshTransport';
 
-export type IBMiTransport = LocalTransport;
+export type IBMiTransport = LocalTransport | SshTransport;
 
-export interface IBMiConnectionConfig {
-  xmlservicePath?: string;
-  stateful?: boolean;
-  ipcPath?: string;
-  transport?: 'local';
-}
+export type IBMiConnectionConfig =
+  | {
+      xmlservicePath?: string;
+      stateful?: boolean;
+      ipcPath?: string;
+      transport?: 'local';
+      sshConfig?: never;
+    }
+  | {
+      xmlservicePath?: string;
+      stateful?: boolean;
+      ipcPath?: string;
+      transport: 'ssh'; // if transport is ssh, sshConfig is required
+      sshConfig: ConnectConfig;
+    };
 
 export interface XmlserviceResult {
   output: string | null;
@@ -38,7 +49,13 @@ export class IBMiConnection {
       this.#xmlserviceParams.push('-c', '*sbmjob', '-i', this.#ipcPath);
     }
 
-    this.#transporter = new LocalTransport();
+    if (this.#transport === 'local') {
+      this.#transporter = new LocalTransport();
+    } else if (this.#transport === 'ssh' && config?.sshConfig) {
+      this.#transporter = new SshTransport(config.sshConfig);
+    } else {
+      throw new Error('Invalid transport. Must be "local" or "ssh" with corresponding config.');
+    }
   }
 
   connect(): Promise<void> {
